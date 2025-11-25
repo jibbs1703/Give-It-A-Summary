@@ -3,7 +3,7 @@
 Give-It-A-Summary is an AI-powered tool designed to help researchers and students quickly summarize academic papers into clear, concise Word documents. Whether you're buried under a mountain of research articles or just need to extract key insights efficiently, this tool has got you covered.
 
 ## Who is it for?
-- **PhD students and researchers**: If you're juggling dozens of papers for your thesis or literature review, this tool helps you quickly grasp the key points without reading every word.
+- **Students and Researchers**: If you're juggling dozens of papers for your thesis or literature review, this tool helps you quickly grasp the key points without reading every word.
 - **Anyone who reads academic papers**: Professors, students, or professionals who want faster insights from complex documents.
 
 ## How does it work?
