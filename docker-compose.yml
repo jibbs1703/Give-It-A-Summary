@@ -1,0 +1,47 @@
+name: summarizer
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/app:/app/app
+      - app_data:/app_data
+    depends_on:
+      - qdrant
+      - ollama
+    networks:
+      - summarizer-network
+
+  ollama:
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - summarizer-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+volumes:
+  app_data:
+  ollama_data:
+
+networks:
+  summarizer-network:
+    driver: bridge
