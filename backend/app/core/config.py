@@ -12,9 +12,9 @@ load_dotenv()
 class Settings(BaseSettings):
     """
     Application settings for the Give-It-A-Summary backend.
-    
+
     Settings can be loaded from environment variables or .env file.
-    
+
     """
 
     APP_API_PREFIX: str = "/api/v1"
@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "gemma:2b")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.1:7B")
 
     class Config:
         """Pydantic configuration."""

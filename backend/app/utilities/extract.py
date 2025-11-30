@@ -5,29 +5,32 @@ from pathlib import Path
 
 import pdfplumber
 from docx import Document
+from langgraph.tools import tool
 from openpyxl import load_workbook
+
+from app.models.agents import ExtractTextInputs
+from app.utilities.logs import get_logger
+
+logger = get_logger(__name__)
 
 EXTRACTORS = {}
 
 
-def register_extractor(extension):
+def register_extractor(extension) -> callable:
     """
-    Decorator to register an extractor function for a given file extension.
+    Decorator to register extractor functions for specific file extensions.
 
     Args:
-    ----------
-    extension : str
-        File extension (e.g., '.pdf', '.txt', '.docx').
-        Must be lowercase and include the leading dot.
+        extension (str): File extension (e.g., ".pdf", ".txt").
 
-    Returns
-    -------
-    callable
-        Decorator that registers the function in the EXTRACTORS registry.
+    Returns:
+        callable: Decorator function.
     """
+
     def decorator(func):
         EXTRACTORS[extension] = func
         return func
+
     return decorator
 
 
@@ -104,36 +107,25 @@ def extract_text_from_csv(csv_path, delimiter=","):
 
 def extract_text(file_path, **kwargs):
     """
-    Unified text extraction dispatcher using Registry Pattern.
+    Extract text from a file based on its extension.
 
-    Parameters
-    ----------
-    file_path : str or Path
-        Path to the input file.
-    **kwargs : dict
-        Optional keyword arguments passed to the registered extractor
-        (e.g., `pages` for PDF, `delimiter` for CSV).
+    Args:
+        file_path (str): Path to the file.
+        **kwargs: Additional arguments for specific extractors.
 
-    Returns
-    -------
-    str
-        Extracted textual content.
-
-    Raises
-    ------
-    ValueError
-        If no extractor is registered for the file extension.
-
-    Design Notes
-    ------------
-    - Registry Pattern decouples dispatch logic from extractor implementations.
-    - Adding support for new formats requires only:
-        1. Writing a new extractor function.
-        2. Decorating it with `@register_extractor(".ext")`.
-    - This design scales well in enterprise pipelines where file types evolve.
+    Returns:
+        str: Extracted text.
     """
     ext = Path(file_path).suffix.lower()
     extractor = EXTRACTORS.get(ext)
     if not extractor:
         raise ValueError(f"No extractor registered for extension: {ext}")
     return extractor(file_path, **kwargs)
+
+
+@tool
+def extract_text_tool(input_args: ExtractTextInputs) -> str:
+    """Create the extract_text tool."""
+    return extract_text(
+        input_args.file_path, pages=input_args.pages, delimiter=input_args.delimiter
+    )
