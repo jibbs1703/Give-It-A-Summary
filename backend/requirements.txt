@@ -1,3 +1,5 @@
+docx
+csv
 fastapi
 openpyxl
 pdfplumber
