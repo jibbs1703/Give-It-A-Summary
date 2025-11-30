@@ -2,12 +2,14 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.app.core.config import get_settings
+from app.core.config import get_settings
+from app.routes import api_router
 
 settings = get_settings()
+router = APIRouter()
 
 
 @asynccontextmanager
@@ -31,3 +33,5 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(api_router, prefix=settings.APP_API_PREFIX)
