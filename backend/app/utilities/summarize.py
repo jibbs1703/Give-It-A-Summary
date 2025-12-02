@@ -2,10 +2,13 @@
 
 import requests
 from langgraph.tools import tool
+from requests import RequestException
 
 from app.core.config import get_settings
 from app.models.agents import SummarizeTextInputs
-from app.utilities.logs import get_logger
+
+from .logs import get_logger
+from .prompts import summarize_prompt
 
 logger = get_logger(__name__)
 settings = get_settings()
@@ -26,10 +29,11 @@ def summarize_text(content: str, max_words: int = 250, style: str = "concise") -
     if not content.strip():
         logger.warning("Empty content passed to summarizer.")
         return ""
-
-    prompt = (
-        f"Summarize the following text in a {style} style, "
-        f"with a maximum of {max_words} words:\n\n{content}"
+    
+    prompt = summarize_prompt.substitute(
+        style=style,
+        max_words=max_words,
+        content=content
     )
 
     try:
@@ -43,7 +47,7 @@ def summarize_text(content: str, max_words: int = 250, style: str = "concise") -
         summary = result.get("response", "").strip()
         logger.info(f"Generated {style} summary with max {max_words} words.")
         return summary
-    except (requests.RequestException, ValueError, KeyError) as e:
+    except (RequestException) as e:
         logger.error(f"Summarization failed: {e}")
         return f"[Error] Summarization failed: {e}"
 
