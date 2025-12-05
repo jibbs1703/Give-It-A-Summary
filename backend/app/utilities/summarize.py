@@ -29,12 +29,8 @@ def summarize_text(content: str, max_words: int = 250, style: str = "concise") -
     if not content.strip():
         logger.warning("Empty content passed to summarizer.")
         return ""
-    
-    prompt = summarize_prompt.substitute(
-        style=style,
-        max_words=max_words,
-        content=content
-    )
+
+    prompt = summarize_prompt.substitute(style=style, max_words=max_words, content=content)
 
     try:
         response = requests.post(
@@ -47,7 +43,7 @@ def summarize_text(content: str, max_words: int = 250, style: str = "concise") -
         summary = result.get("response", "").strip()
         logger.info(f"Generated {style} summary with max {max_words} words.")
         return summary
-    except (RequestException) as e:
+    except RequestException as e:
         logger.error(f"Summarization failed: {e}")
         return f"[Error] Summarization failed: {e}"
 

@@ -1,8 +1,10 @@
 docx
-csv
 fastapi
+httpx
 openpyxl
 pdfplumber
+pydantic
+pydantic-settings
 python-docx
 python-dotenv
 uvicorn

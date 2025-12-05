@@ -9,15 +9,17 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-router = APIRouter(tags=["health"])
+router = APIRouter()
 
 
 @router.get("/health")
 async def health_check() -> dict[str, Any]:
-    """Check the health of the backend and Ollama.
+    """
+    Check the health of services needed for the application.
+    -  LLM backend
 
     Returns:
-        dict: Health status information.
+        Dictionary containing health status information.
     """
     ollama_models = []
     try:
