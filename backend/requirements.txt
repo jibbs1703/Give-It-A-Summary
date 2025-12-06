@@ -3,6 +3,7 @@ fastapi
 httpx
 openpyxl
 pdfplumber
+pre-commit
 pydantic
 pydantic-settings
 python-docx
