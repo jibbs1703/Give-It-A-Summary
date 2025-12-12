@@ -1,8 +1,7 @@
 """Give It A Summary - Summarization Utilities Module."""
 
-import requests
+import httpx
 from langgraph.tools import tool
-from requests import RequestException
 
 from app.core.config import get_settings
 from app.models.agents import SummarizeTextInputs
@@ -14,7 +13,11 @@ logger = get_logger(__name__)
 settings = get_settings()
 
 
-def summarize_text(content: str, max_words: int = 250, style: str = "concise") -> str:
+async def summarize_text(
+    content: str,
+    max_words: int = 250,
+    style: str = "concise",
+) -> str:
     """
     Summarize extracted text using a local Ollama Llama model.
 
@@ -33,17 +36,18 @@ def summarize_text(content: str, max_words: int = 250, style: str = "concise") -
     prompt = summarize_prompt.substitute(style=style, max_words=max_words, content=content)
 
     try:
-        response = requests.post(
-            settings.OLLAMA_BASE_URL,
-            json={"model": settings.OLLAMA_MODEL, "prompt": prompt, "stream": False},
-            timeout=120,
-        )
-        response.raise_for_status()
-        result = response.json()
-        summary = result.get("response", "").strip()
-        logger.info(f"Generated {style} summary with max {max_words} words.")
-        return summary
-    except RequestException as e:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{settings.OLLAMA_BASE_URL}/api/generate",
+                json={"model": settings.OLLAMA_MODEL, "prompt": prompt, "stream": False},
+                timeout=120.0,
+            )
+            response.raise_for_status()
+            result = response.json()
+            summary = result.get("response", "").strip()
+            logger.info(f"Generated {style} summary with max {max_words} words.")
+            return summary
+    except httpx.HTTPError as e:
         logger.error(f"Summarization failed: {e}")
         return f"[Error] Summarization failed: {e}"
 

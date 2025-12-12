@@ -17,6 +17,7 @@ class Settings(BaseSettings):
 
     """
 
+    ALLOWED_EXTENSIONS: set = {".pdf", ".docx", ".txt", ".xlsx", ".xls", ".csv"}
     APP_API_PREFIX: str = "/api/v1"
     APP_DESCRIPTION: str = "AI powered academic paper summarization service."
     APP_NAME: str = "Give It A Summary"
