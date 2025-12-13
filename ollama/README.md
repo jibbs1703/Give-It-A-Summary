@@ -10,7 +10,7 @@ in a self-contained environment.
 
 ## Building the Image
 
-Navigate to the `ollama` directory containing the Dockerfile and run:
+Navigate to the `ollama` directory containing the Dockerfile and the docker configuration files, then build the Docker image:
 
 ```bash
 cd ollama
@@ -19,7 +19,7 @@ docker build -t ollama-custom:latest .
 
 ## Running the Container
 
-Run the container with the following command:
+Run the container from the built image with the following command:
 
 ```bash
 docker run -d \

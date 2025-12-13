@@ -15,5 +15,5 @@ class SummarizeTextInputs(BaseModel):
     """Pydantic model for text summarization inputs."""
 
     content: str
-    max_words: int = 250
+    max_words: int = 2500
     style: str = "concise"
