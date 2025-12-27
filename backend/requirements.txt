@@ -1,6 +1,8 @@
 docx
 fastapi
 httpx
+langchain-core
+langextract
 openpyxl
 pdfplumber
 pre-commit

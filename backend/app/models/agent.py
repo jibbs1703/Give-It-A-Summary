@@ -1,4 +1,4 @@
-"""Give-It-A-Summary agent models module."""
+"""Internal agent models for tool processing."""
 
 from pydantic import BaseModel
 
@@ -15,5 +15,14 @@ class SummarizeTextInputs(BaseModel):
     """Pydantic model for text summarization inputs."""
 
     content: str
-    max_words: int = 2500
+    max_words: int = 1000
     style: str = "concise"
+
+
+class ChatMessage(BaseModel):
+    """Pydantic model for conversation messages."""
+
+    role: str
+    content: str
+    file_path: str | None = None
+    timestamp: str | None = None
