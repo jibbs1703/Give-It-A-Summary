@@ -36,6 +36,19 @@ services:
       retries: 10
       start_period: 120s
 
+  ui:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ui
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - summarizer-network
+
 volumes:
   app_data:
   ollama_data:
