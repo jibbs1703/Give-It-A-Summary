@@ -38,8 +38,8 @@ async def summarize_text(
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{settings.OLLAMA_BASE_URL}/api/generate",
-                json={"model": settings.OLLAMA_MODEL, "prompt": prompt, "stream": False},
+                f"{settings.ollama_base_url}/api/generate",
+                json={"model": settings.ollama_model, "prompt": prompt, "stream": False},
                 timeout=120.0,
             )
             response.raise_for_status()

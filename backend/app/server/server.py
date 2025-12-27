@@ -19,11 +19,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=settings.APP_NAME,
-    version=settings.APP_VERSION,
-    description=settings.APP_DESCRIPTION,
+    title=settings.application_name,
+    version=settings.application_version,
+    description=settings.application_description,
     lifespan=lifespan,
-    debug=settings.DEBUG,
+    debug=settings.application_debug_flag,
 )
 
 app.add_middleware(
@@ -34,4 +34,4 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix=settings.APP_API_PREFIX)
+app.include_router(api_router, prefix=settings.application_api_prefix)

@@ -17,15 +17,15 @@ class Settings(BaseSettings):
 
     """
 
-    ALLOWED_EXTENSIONS: set = {".pdf", ".docx", ".txt", ".xlsx", ".xls", ".csv"}
-    APP_API_PREFIX: str = "/api/v1"
-    APP_DESCRIPTION: str = "AI powered academic paper summarization service."
-    APP_NAME: str = "Give It A Summary"
-    APP_VERSION: str = "1.0.0"
-    DEBUG: bool = False
+    allowed_extensions: set = {".pdf", ".docx", ".txt", ".xlsx", ".xls", ".csv"}
+    application_api_prefix: str = "/api/v1"
+    application_description: str = "AI powered academic paper summarization service."
+    application_name: str = "Give It A Summary"
+    application_version: str = "1.0.0"
+    application_debug_flag: bool = False
 
-    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "llama3.1:8B")
+    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3.1:8B")
 
     class Config:
         """Pydantic configuration."""

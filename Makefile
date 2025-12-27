@@ -1,4 +1,13 @@
-.PHONY: build clean
+.PHONY: add commit push build clean clear clear-pycache clear-ruff clear-pytest
+
+add:
+	git add .
+
+commit: add
+	git commit -m "$(msg)"
+
+push: commit
+	git push
 
 build:
 	docker compose down -v || true
@@ -20,3 +29,4 @@ clear-pytest: clear-ruff
 	find . -type d -name '.pytest_cache' -exec rm -rf {} +
 
 clear: clear-pytest
+	clear

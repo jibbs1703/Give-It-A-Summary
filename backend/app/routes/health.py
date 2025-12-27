@@ -24,7 +24,7 @@ async def health_check() -> dict[str, Any]:
     ollama_models = []
     try:
         async with httpx.AsyncClient() as http_client:
-            response = await http_client.get(f"{settings.OLLAMA_BASE_URL}/api/tags", timeout=5.0)
+            response = await http_client.get(f"{settings.ollama_base_url}/api/tags", timeout=5.0)
             if response.status_code == 200:
                 models_data = response.json()
                 for model in models_data.get("models", []):
