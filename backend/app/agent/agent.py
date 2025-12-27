@@ -2,8 +2,8 @@
 
 from langgraph.graph import Graph
 
-from .extract import extract_text_tool
-from .summarize import summarize_text_tool
+from ..tools.extract import extract_text_tool
+from ..tools.summarize import summarize_text_tool
 
 graph = Graph()
 

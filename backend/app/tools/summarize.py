@@ -1,4 +1,4 @@
-"""Give It A Summary - Summarization Utilities Module."""
+"""Give It A Summary - Summarization Tools Module."""
 
 import httpx
 from langgraph.tools import tool
@@ -6,10 +6,11 @@ from langgraph.tools import tool
 from app.core.config import get_settings
 from app.models.agents import SummarizeTextInputs
 
-from .logs import get_logger
-from .prompts import summarize_prompt
+from ..utilities.logs import get_logger
+from ..utilities.prompts import SUMMARIZE_PROMPT
 
 logger = get_logger(__name__)
+
 settings = get_settings()
 
 
@@ -33,7 +34,7 @@ async def summarize_text(
         logger.warning("Empty content passed to summarizer.")
         return ""
 
-    prompt = summarize_prompt.substitute(style=style, max_words=max_words, content=content)
+    prompt = SUMMARIZE_PROMPT.substitute(style=style, max_words=max_words, content=content)
 
     try:
         async with httpx.AsyncClient() as client:

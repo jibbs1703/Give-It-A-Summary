@@ -2,7 +2,7 @@
 
 from string import Template
 
-summarize_prompt = Template("""
+SUMMARIZE_PROMPT = Template("""
         Summarize the following text in a $style style, with a maximum of $max_words words:
         $content
     """)

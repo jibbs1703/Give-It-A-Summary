@@ -1,4 +1,4 @@
-"""Give It A Summary - Extraction Utilities Module."""
+"""Give It A Summary - Extraction Tools Module."""
 
 import csv
 from pathlib import Path
