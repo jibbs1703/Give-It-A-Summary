@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -16,6 +16,8 @@ import {
   Card,
   CardContent,
   Grid,
+  Alert,
+  Chip,
 } from '@mui/material';
 import {
   Send as SendIcon,
@@ -26,6 +28,8 @@ import {
   Email as EmailIcon,
   Speed as SpeedIcon,
   CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  HourglassEmpty as LoadingIcon,
 } from '@mui/icons-material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -196,7 +200,37 @@ function ChatInterface() {
   ]);
   const [input, setInput] = useState('');
   const [file, setFile] = useState(null);
+  const [agentReady, setAgentReady] = useState(false);
+  const [agentStatus, setAgentStatus] = useState('checking');
   const fileInputRef = useRef(null);
+
+  // API base URL - use environment variable or default
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
+
+  // Check agent readiness on component mount
+  useEffect(() => {
+    checkAgentReadiness();
+  }, []);
+
+  const checkAgentReadiness = async () => {
+    try {
+      setAgentStatus('checking');
+      const response = await fetch('/api/v1/health');
+      const data = await response.json();
+
+      if (response.ok && data['Backend Status'] === 'healthy') {
+        setAgentReady(true);
+        setAgentStatus('ready');
+      } else {
+        setAgentReady(false);
+        setAgentStatus('unavailable');
+      }
+    } catch (error) {
+      console.error('Failed to check agent readiness:', error);
+      setAgentReady(false);
+      setAgentStatus('error');
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() && !file) return;
@@ -210,20 +244,66 @@ function ChatInterface() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    const currentFile = file;
     setInput('');
     setFile(null);
 
-    // TODO: Send to backend API
-    // For now, simulate response
-    setTimeout(() => {
+    try {
+      // Prepare form data for the API call
+      const formData = new FormData();
+      formData.append('message', currentInput);
+
+      if (currentFile) {
+        formData.append('file', currentFile);
+      }
+
+      // Call the backend API
+      const response = await fetch('/api/v1/chat', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      // Add the bot response
       const botResponse = {
         id: messages.length + 2,
-        text: "Processing your request... (This is a placeholder response)",
+        text: data.message || (data.success ? 'Request processed successfully!' : 'An error occurred while processing your request.'),
         sender: 'bot',
         timestamp: new Date(),
+        success: data.success,
       };
+
       setMessages(prev => [...prev, botResponse]);
-    }, 1000);
+
+    } catch (error) {
+      console.error('Failed to send message:', error);
+
+      // Add error response
+      const errorResponse = {
+        id: messages.length + 2,
+        text: 'Sorry, I encountered an error while processing your request. Please try again.',
+        sender: 'bot',
+        timestamp: new Date(),
+        success: false,
+      };
+
+      setMessages(prev => [...prev, errorResponse]);
+    }
+  };
+
+  const handleResend = async (messageToResend) => {
+    // Set the input and file to the message being resent
+    setInput(messageToResend.text);
+    if (messageToResend.file) {
+      setFile(messageToResend.file);
+    }
+
+    // Automatically send the message
+    setTimeout(() => {
+      handleSend();
+    }, 100);
   };
 
   const handleFileSelect = (event) => {
@@ -283,6 +363,37 @@ function ChatInterface() {
         </Container>
       </Box>
 
+      {/* Agent Status Indicator */}
+      <Container maxWidth="md" sx={{ py: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+          <Chip
+            icon={
+              agentStatus === 'ready' ? <CheckCircleIcon /> :
+              agentStatus === 'checking' ? <LoadingIcon /> :
+              <ErrorIcon />
+            }
+            label={
+              agentStatus === 'ready' ? 'Agent is ready' :
+              agentStatus === 'checking' ? 'Checking agent status...' :
+              agentStatus === 'unavailable' ? 'Agent unavailable' :
+              'Connection error'
+            }
+            color={
+              agentStatus === 'ready' ? 'success' :
+              agentStatus === 'checking' ? 'warning' :
+              'error'
+            }
+            variant="outlined"
+            sx={{
+              fontWeight: 'bold',
+              '& .MuiChip-icon': {
+                animation: agentStatus === 'checking' ? 'spin 2s linear infinite' : 'none',
+              },
+            }}
+          />
+        </Box>
+      </Container>
+
       {/* Chat Container */}
       <Container maxWidth="md" sx={{ flex: 1, py: 2 }}>
         <Paper
@@ -328,6 +439,10 @@ function ChatInterface() {
                           backgroundColor: message.sender === 'user' ? 'primary.main' : 'grey.100',
                           color: message.sender === 'user' ? 'white' : 'text.primary',
                           borderRadius: 2,
+                          position: 'relative',
+                          '&:hover .resend-button': {
+                            opacity: 1,
+                          },
                         }}
                       >
                         <ListItemText
@@ -339,6 +454,27 @@ function ChatInterface() {
                         <Typography variant="caption" sx={{ opacity: 0.7 }}>
                           {message.timestamp.toLocaleTimeString()}
                         </Typography>
+                        {message.sender === 'user' && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleResend(message)}
+                            className="resend-button"
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              right: 8,
+                              opacity: 0,
+                              transition: 'opacity 0.2s',
+                              color: 'inherit',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                              },
+                            }}
+                            title="Resend message"
+                          >
+                            ↻
+                          </IconButton>
+                        )}
                       </Paper>
                     </Box>
                   </ListItem>
