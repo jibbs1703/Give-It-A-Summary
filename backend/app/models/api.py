@@ -8,6 +8,7 @@ class ChatRequest(BaseModel):
 
     message: str
     file: bytes | None = None
+    filename: str | None = None
     conversation_id: str | None = None
 
 

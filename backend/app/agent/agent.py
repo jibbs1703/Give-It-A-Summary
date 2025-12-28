@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 from app.models.agent import ChatMessage, SummarizeTextInputs
 from app.models.api import AgentResponse, ChatRequest
+from app.tools.export import DocumentExportInputs, export_to_word_document
 from app.tools.extract import extract_text_from_file
 from app.tools.summarize import summarize_text
 from app.utilities.intent import parse_user_message
@@ -102,14 +103,32 @@ def summarize_text_node(state: AgentState) -> dict[str, Any]:
 
 
 def create_document_node(state: AgentState) -> dict[str, Any]:
-    """Create a document with the summary."""
+    """Create a professional Word document with the summary."""
     if not state.summary:
         return {"error_message": "No summary available for document creation"}
 
+    intent = state.intent_result
+
     try:
-        summary_path = f"summary_{hash(state.summary)}.md"
-        logger.info("Document creation placeholder: %s", summary_path)
-        return {"summary_path": summary_path}
+        original_filename = "unknown_document"
+        if state.file_path:
+            original_filename = Path(state.file_path).name
+
+        export_inputs = DocumentExportInputs(
+            summary=state.summary,
+            original_filename=original_filename,
+            word_count=intent.get("word_count") or 250,
+            style=intent.get("style") or "concise",
+        )
+
+        result = export_to_word_document(export_inputs)
+
+        if not result.success:
+            return {"error_message": f"Document generation failed: {result.error_message}"}
+
+        logger.info("Word document created successfully: %s", result.file_path)
+        return {"summary_path": result.file_path}
+
     except (TypeError, AttributeError) as e:
         logger.error("Data type error during document creation: %s", str(e))
         return {"error_message": f"Document creation data error: {str(e)}"}
@@ -200,7 +219,14 @@ def process_chat_request(request: ChatRequest) -> AgentResponse:
 
     if request.file:
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+            # Determine file extension from filename or default to .txt
+            file_extension = ".txt"  # default
+            if request.filename:
+                from pathlib import Path
+
+                file_extension = Path(request.filename).suffix or ".txt"
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
                 temp_file.write(request.file)
                 temp_file_path = temp_file.name
 
@@ -222,8 +248,12 @@ def process_chat_request(request: ChatRequest) -> AgentResponse:
             Path(initial_state.file_path).unlink()
             logger.info("Cleaned up temporary file: %s", initial_state.file_path)
 
-        if hasattr(final_state, "response"):
-            return final_state.response
+        if (
+            isinstance(final_state, dict)
+            and "response" in final_state
+            and final_state["response"] is not None
+        ):
+            return final_state["response"]
         else:
             return AgentResponse(
                 message="Processing completed but no response generated", success=False

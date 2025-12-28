@@ -110,6 +110,57 @@ def extract_email(text: str) -> str | None:
     return None
 
 
+def parse_intent_from_text(text: str) -> dict[str, Any]:
+    """
+    Parse intent information from plain text response when JSON parsing fails.
+
+    Args:
+        text: Plain text response from LLM
+
+    Returns:
+        Dictionary with parsed intent information
+    """
+    text_lower = text.lower()
+
+    summary_keywords = [
+        "summarize",
+        "summary",
+        "abstract",
+        "overview",
+        "condense",
+        "shorten",
+        "tl;dr",
+        "key points",
+        "main ideas",
+    ]
+    is_summary_request = any(keyword in text_lower for keyword in summary_keywords)
+
+    word_count = None
+    import re
+
+    word_match = re.search(r"(\d+)\s*words?", text_lower)
+    if word_match:
+        word_count = word_match.group(1)
+
+    style = None
+    if "concise" in text_lower or "brief" in text_lower or "short" in text_lower:
+        style = "concise"
+    elif "detailed" in text_lower or "comprehensive" in text_lower or "thorough" in text_lower:
+        style = "detailed"
+    elif "bullet" in text_lower or "bullets" in text_lower or "structured" in text_lower:
+        style = "bullets"
+
+    email_match = re.search(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", text)
+    email = email_match.group(0) if email_match else None
+
+    return {
+        "is_summary_request": "yes" if is_summary_request else "no",
+        "word_count": word_count or "default",
+        "style": style or "default",
+        "email": email or "none",
+    }
+
+
 def analyze_intent_with_llm(message: str) -> IntentResult:
     """
     Analyze user message using LLM for intent detection.
@@ -134,7 +185,7 @@ def analyze_intent_with_llm(message: str) -> IntentResult:
         f"{settings.ollama_base_url}/api/generate",
         json=ollama_payload,
         headers={"Content-Type": "application/json"},
-        timeout=30.0,
+        timeout=120.0,
     )
 
     result_data = response.json()
@@ -142,8 +193,14 @@ def analyze_intent_with_llm(message: str) -> IntentResult:
 
     logger.info("LLM response received: %s...", llm_response[:100])
 
-    parsed_json = json.loads(llm_response)
-    logger.info("Successfully parsed LLM JSON response: %s", parsed_json)
+    try:
+        parsed_json = json.loads(llm_response)
+        logger.info("Successfully parsed LLM JSON response: %s", parsed_json)
+    except json.JSONDecodeError:
+        logger.warning(
+            "LLM response is not valid JSON, falling back to text analysis: %s", llm_response[:200]
+        )
+        parsed_json = parse_intent_from_text(llm_response)
 
     is_summary_request = parsed_json.get("is_summary_request", "no").lower() == "yes"
     word_count_str = parsed_json.get("word_count", "default")

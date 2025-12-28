@@ -1,8 +1,7 @@
-docx
 fastapi
 httpx
 langchain-core
-langextract
+langgraph
 openpyxl
 pdfplumber
 pre-commit
@@ -10,4 +9,6 @@ pydantic
 pydantic-settings
 python-docx
 python-dotenv
+python-multipart
+requests
 uvicorn
