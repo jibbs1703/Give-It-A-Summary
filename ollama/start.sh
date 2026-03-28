@@ -1,5 +1,5 @@
 #!/bin/sh
-MODEL_NAME="llama3.1:8B"  # Specify the model name here
+MODEL_NAME="granite4:350m"
 
 ollama serve &
 sleep 10

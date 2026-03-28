@@ -8,6 +8,14 @@ services:
     restart: unless-stopped
     ports:
       - "8000:8000"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-granite4:350m}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - SMTP_FROM=${SMTP_FROM:-}
     volumes:
       - ./backend/app:/app/app
       - app_data:/app_data
@@ -43,7 +51,7 @@ services:
     container_name: ui
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "8501:8501"
     depends_on:
       - api
     networks:
