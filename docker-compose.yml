@@ -1,10 +1,10 @@
 name: summarizer
 services:
-  api:
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: api
+    container_name: backend
     restart: unless-stopped
     ports:
       - "8000:8000"
@@ -44,16 +44,16 @@ services:
       retries: 10
       start_period: 120s
 
-  ui:
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: ui
+    container_name: frontend
     restart: unless-stopped
     ports:
       - "8501:8501"
     depends_on:
-      - api
+      - backend
     networks:
       - summarizer-network
 

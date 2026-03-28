@@ -6,7 +6,7 @@ from pathlib import Path
 import requests
 import streamlit as st
 
-API_URL = "http://api:8000/api/v1"
+API_URL = "http://backend:8000/api/v1"
 
 st.set_page_config(
     page_title="Give It A Summary",
@@ -22,8 +22,8 @@ with st.sidebar:
         "Summary Style",
         ["concise", "detailed", "bullets"],
         help=(
-            "**concise** — brief overview (1–2 paragraphs)\n\n"
-            "**detailed** — comprehensive coverage (3–5 paragraphs)\n\n"
+            "**concise** — brief overview (1-2 paragraphs)\n\n"
+            "**detailed** — comprehensive coverage (3-5 paragraphs)\n\n"
             "**bullets** — key points as a bulleted list"
         ),
     )
@@ -44,24 +44,24 @@ with st.sidebar:
     )
 
     st.divider()
-    st.subheader("🔧 Service Status")
+    st.subheader("Service Status")
     if st.button("Check", use_container_width=True):
         try:
-            r = requests.get(f"{API_URL}/health", timeout=5)
+            r = requests.get(f"{API_URL}/health", timeout=10)
             if r.ok:
                 data = r.json()
-                st.success("Backend: ✅ Healthy")
+                st.success("Backend is Healthy")
                 for m in data.get("Available Ollama Models", []):
                     if "error" not in m:
-                        st.info(f"🤖 {m['name']} ({m['size_gb']} GB)")
+                        st.info(f"{m['name']} ({m['size_gb']} GB)")
                     else:
-                        st.warning(f"⚠️ Ollama: {m['error']}")
+                        st.warning(f"Ollama: {m['error']}")
             else:
                 st.error(f"Backend returned {r.status_code}")
         except requests.exceptions.ConnectionError:
-            st.error("❌ Backend unreachable")
+            st.error("Backend unreachable")
         except requests.exceptions.Timeout:
-            st.error("❌ Health check timed out")
+            st.error("Health check timed out")
 
 
 st.title("📄 Give It A Summary")
