@@ -17,5 +17,9 @@ class AgentResponse(BaseModel):
 
     message: str
     success: bool
+    summary: str | None = None
+    summary_docx_b64: str | None = None
     summary_path: str | None = None
+    email_sent: bool = False
+    detected_email: str | None = None
     conversation_id: str | None = None

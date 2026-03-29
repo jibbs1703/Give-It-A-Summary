@@ -1,5 +1,6 @@
 """Give-It-A-Summary agent utilities module."""
 
+import base64
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -45,10 +46,14 @@ def parse_intent_node(state: AgentState) -> dict[str, Any]:
 
 
 def check_requirements_node(state: AgentState) -> dict[str, Any]:
-    """Check if we have the requirements for summarization."""
+    """Check if we have the requirements for summarization.
+
+    A file upload always implies a summarization request, so the intent flag
+    is only enforced when no file is present.
+    """
     intent = state.intent_result
 
-    if not intent.get("is_summary_request"):
+    if not state.file_path and not intent.get("is_summary_request"):
         return {"error_message": "This is not a summarization request"}
 
     if not state.file_path:
@@ -136,13 +141,32 @@ def create_document_node(state: AgentState) -> dict[str, Any]:
 
 def handle_delivery_node(state: AgentState) -> dict[str, Any]:
     """Handle delivery of summary via email or UI."""
-    intent = state.intent_result
+    from app.tools.email import EmailInputs, send_summary_email
 
-    if intent.get("email"):
-        logger.info("Email delivery requested for: %s", intent["email"])
-        return {"email_sent": True}
+    intent = state.intent_result
+    email = intent.get("email")
+
+    if email and state.summary_path:
+        logger.info("Attempting email delivery to: %s", email)
+        preview = state.summary[:500] + "..." if len(state.summary) > 500 else state.summary
+        email_inputs = EmailInputs(
+            recipient=email,
+            subject="Your Academic Paper Summary — Give It A Summary",
+            body=(
+                f"Hi,\n\nYour summary is ready. Find it attached as a Word document."
+                f"\n\nPreview:\n{preview}\n\nRegards,\nGive It A Summary"
+            ),
+            attachment_path=state.summary_path,
+            attachment_filename=Path(state.summary_path).stem + "_summary.docx",
+        )
+        result = send_summary_email(email_inputs)
+        if result.success:
+            logger.info("Email sent successfully to %s", email)
+        else:
+            logger.warning("Email delivery failed: %s", result.error_message)
+        return {"email_sent": result.success}
     else:
-        logger.info("UI delivery - summary ready for chat interface")
+        logger.info("UI delivery — summary ready for display")
         return {}
 
 
@@ -157,17 +181,26 @@ def create_response_node(state: AgentState) -> dict[str, Any]:
 
     intent = state.intent_result
     delivery_method = "email" if intent.get("email") else "chat interface"
-
     response_message = (
         f"I've successfully summarized your document and delivered it via {delivery_method}."
     )
 
-    if state.summary:
-        response_message += f"\n\nSummary preview: {state.summary[:200]}..."
+    summary_docx_b64 = None
+    if state.summary_path and Path(state.summary_path).exists():
+        try:
+            with open(state.summary_path, "rb") as f:
+                summary_docx_b64 = base64.b64encode(f.read()).decode()
+        except OSError as e:
+            logger.warning("Could not read summary docx for response: %s", str(e))
 
     return {
         "response": AgentResponse(
-            message=response_message, success=True, summary_path=state.summary_path
+            message=response_message,
+            success=True,
+            summary=state.summary,
+            summary_docx_b64=summary_docx_b64,
+            summary_path=state.summary_path,
+            email_sent=state.email_sent,
         )
     }
 
@@ -219,11 +252,8 @@ def process_chat_request(request: ChatRequest) -> AgentResponse:
 
     if request.file:
         try:
-            # Determine file extension from filename or default to .txt
-            file_extension = ".txt"  # default
+            file_extension = ".txt"
             if request.filename:
-                from pathlib import Path
-
                 file_extension = Path(request.filename).suffix or ".txt"
 
             with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:

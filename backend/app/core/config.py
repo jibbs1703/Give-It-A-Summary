@@ -6,8 +6,6 @@ from functools import lru_cache
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
-load_dotenv()
-
 
 class Settings(BaseSettings):
     """
@@ -17,6 +15,8 @@ class Settings(BaseSettings):
 
     """
 
+    load_dotenv()
+
     allowed_extensions: set = {".pdf", ".docx", ".txt", ".xlsx", ".xls", ".csv"}
     application_api_prefix: str = "/api/v1"
     application_description: str = "AI powered academic paper summarization service."
@@ -25,7 +25,13 @@ class Settings(BaseSettings):
     application_debug_flag: bool = False
 
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3.1:8B")
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "qwen3:0.6b")
+
+    smtp_host: str = os.getenv("SMTP_HOST", "")
+    smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
+    smtp_username: str = os.getenv("SMTP_USERNAME", "")
+    smtp_password: str = os.getenv("SMTP_PASSWORD", "")
+    smtp_from: str = os.getenv("SMTP_FROM", "")
 
     class Config:
         """Pydantic configuration."""

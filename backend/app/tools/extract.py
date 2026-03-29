@@ -7,11 +7,9 @@ from typing import Any
 
 import pdfplumber
 from docx import Document
-from langchain_core.tools import tool
 from openpyxl import load_workbook
 from pydantic import BaseModel, Field
 
-from app.models.agent import ExtractTextInputs
 from app.utilities.logs import get_logger
 
 logger = get_logger(__name__)
@@ -265,38 +263,3 @@ def extract_text_from_bytes(file_bytes: bytes, filename: str, **kwargs) -> TextE
             success=False,
             error_message=error_msg,
         )
-
-
-@tool
-def extract_text_tool(inputs: ExtractTextInputs) -> str:
-    """
-    LangGraph tool for text extraction.
-
-    This tool extracts text from various file formats and returns the content
-    as a string for further processing in the agent workflow.
-
-    Args:
-        inputs: ExtractTextInputs containing file path and extraction parameters
-
-    Returns:
-        Extracted text content as string, or error message if extraction fails
-    """
-    logger.info("Extract text tool called with inputs: %s", inputs)
-
-    try:
-        result = extract_text_from_file(
-            file_path=inputs.file_path,
-        )
-
-        if result.success:
-            logger.info("Text extraction successful: %d characters extracted", len(result.content))
-            return result.content
-        else:
-            error_msg = f"Text extraction failed: {result.error_message}"
-            logger.error(error_msg)
-            return error_msg
-
-    except OSError as e:
-        error_msg = f"Tool execution failed: {e}"
-        logger.error(error_msg)
-        return error_msg

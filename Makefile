@@ -19,6 +19,10 @@ clean:
 	docker image prune -af
 	docker volume prune -af
 
+lint:
+	python3 -m ruff format
+	python3 -m ruff check
+
 clear-pycache:
 	find . -type d -name '__pycache__' -exec rm -rf {} +
 

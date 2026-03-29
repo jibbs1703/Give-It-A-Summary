@@ -7,6 +7,7 @@ from typing import Any
 import requests
 
 from app.core.config import get_settings
+from app.tools.email import extract_email_from_text
 from app.utilities.logs import get_logger
 from app.utilities.prompts import NLP_PARSE_PROMPT
 
@@ -93,7 +94,7 @@ def check_summary_intent(text: str) -> bool:
 
 def extract_email(text: str) -> str | None:
     """
-    Extract email address using regex pattern.
+    Extract email address from text — delegates to the email tool.
 
     Args:
         text: Text to search for email
@@ -101,13 +102,7 @@ def extract_email(text: str) -> str | None:
     Returns:
         First email address found, or None
     """
-    email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
-    matches = re.findall(email_pattern, text)
-
-    if matches:
-        return matches[0].lower()
-
-    return None
+    return extract_email_from_text(text)
 
 
 def parse_intent_from_text(text: str) -> dict[str, Any]:
@@ -136,8 +131,6 @@ def parse_intent_from_text(text: str) -> dict[str, Any]:
     is_summary_request = any(keyword in text_lower for keyword in summary_keywords)
 
     word_count = None
-    import re
-
     word_match = re.search(r"(\d+)\s*words?", text_lower)
     if word_match:
         word_count = word_match.group(1)
@@ -150,8 +143,7 @@ def parse_intent_from_text(text: str) -> dict[str, Any]:
     elif "bullet" in text_lower or "bullets" in text_lower or "structured" in text_lower:
         style = "bullets"
 
-    email_match = re.search(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", text)
-    email = email_match.group(0) if email_match else None
+    email = extract_email_from_text(text)
 
     return {
         "is_summary_request": "yes" if is_summary_request else "no",
@@ -177,7 +169,7 @@ def analyze_intent_with_llm(message: str) -> IntentResult:
         "model": settings.ollama_model,
         "prompt": prompt,
         "stream": False,
-        "options": {"temperature": 0.1, "top_p": 0.9, "num_predict": 200},
+        "options": {"temperature": 0.1, "top_p": 0.9, "num_predict": 200, "num_ctx": 2048},
     }
 
     logger.info("Sending intent analysis request to Ollama at %s", settings.ollama_base_url)

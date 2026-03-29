@@ -1,8 +1,5 @@
 """Give It A Summary - Prompt Templates Module."""
 
-"""Give It A Summary - Prompt Templates Module."""
-
-
 SUMMARIZE_PROMPT = """
 # ACADEMIC TEXT SUMMARIZATION TASK
 
@@ -31,6 +28,7 @@ the specified parameters.
 - Include key quantitative results and findings
 - Preserve important citations or references if present
 - End with main conclusions or implications
+- Do NOT include word counts, labels, or any meta-commentary in the output
 
 ## TEXT TO SUMMARIZE
 {content}
@@ -96,6 +94,63 @@ You MUST respond with ONLY a valid JSON object in this exact format with no addi
 - Do not include any text outside the JSON object
 - Ensure the JSON is valid and parseable
 """
+
+CHUNK_SUMMARIZE_PROMPT = """
+# PARTIAL DOCUMENT SUMMARIZATION TASK
+
+## YOUR ROLE
+You are an expert academic research assistant. You are processing one section
+of a longer document as part of a multi-pass summarization pipeline.
+
+## TASK OBJECTIVE
+Extract and preserve all key information from this section. Your output will
+be combined with summaries of other sections to produce a final summary.
+
+## REQUIREMENTS
+- Capture all important findings, methods, data points, and conclusions
+- Preserve technical terms and quantitative results exactly
+- Write in clear, academic prose — no meta-commentary
+- Do not mention that this is a partial section
+- Do NOT include word counts, labels, or annotations in the output
+
+## SECTION TEXT
+{content}
+
+## SECTION SUMMARY
+"""
+
+REDUCE_PROMPT = """
+# FINAL SUMMARY SYNTHESIS TASK
+
+## YOUR ROLE
+You are an expert academic research assistant. You have been given a set of
+partial summaries covering different sections of a single document.
+
+## TASK OBJECTIVE
+Synthesize the partial summaries below into one cohesive final summary that
+reads as if it were written from the original document.
+
+## SPECIFIC REQUIREMENTS
+- **Style**: {style}
+  - "concise": Brief overview, main points only (1-2 paragraphs)
+  - "detailed": Comprehensive coverage with key details (3-5 paragraphs)
+  - "bullets": Structured bullet points highlighting main sections and findings
+
+- **Word Limit**: Maximum {max_words} words
+- **Content Focus**: Main ideas, key findings, conclusions, and methodology
+- **Tone**: Academic, professional, objective
+- Eliminate redundancy across partial summaries
+- Preserve important quantitative results and technical terms
+- End with main conclusions or implications
+- Do NOT include word counts, labels, or any meta-commentary in the output
+
+## PARTIAL SUMMARIES
+{partial_summaries}
+
+## FINAL SUMMARY
+Write your synthesized summary below:
+"""
+
 
 EMAIL_EXTRACT_PROMPT = """
 # EMAIL EXTRACTION TASK

@@ -68,7 +68,6 @@ async def chat_endpoint(
                     status_code=400, detail=f"Failed to read uploaded file: {str(e)}"
                 ) from e
 
-        # Create chat request
         try:
             chat_request = ChatRequest(
                 message=message.strip(),
@@ -83,7 +82,6 @@ async def chat_endpoint(
         logger.info("Processing chat request for conversation: %s", conversation_id)
         response = process_chat_request(chat_request)
 
-        # Add conversation ID to response
         response.conversation_id = conversation_id
 
         logger.info("Chat request processed successfully for conversation: %s", conversation_id)
